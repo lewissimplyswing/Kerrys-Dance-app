@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="Dance Register"/>
+  <meta name="theme-color" content="#1D9E75"/>
+  <meta name="description" content="Dance studio class register and attendance tracker"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <title>Dance Studio Register</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --green: #1D9E75;
+      --green-dark: #0F6E56;
+      --green-light: #E1F5EE;
+      --green-text: #085041;
+      --red: #E24B4A;
+      --red-light: #FCEBEB;
+      --red-text: #791F1F;
+      --amber: #EF9F27;
+      --amber-light: #FAEEDA;
+      --blue: #185FA5;
+      --blue-light: #E6F1FB;
+      --blue-text: #042C53;
+      --bg: #F7F7F5;
+      --card: #FFFFFF;
+      --border: rgba(0,0,0,0.1);
+      --border-strong: rgba(0,0,0,0.18);
+      --text: #1a1a18;
+      --text-2: #6b6b68;
+      --text-3: #9b9b97;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 4px rgba(0,0,0,0.08);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111110;
+        --card: #1c1c1a;
+        --border: rgba(255,255,255,0.1);
+        --border-strong: rgba(255,255,255,0.18);
+        --text: #f0f0ec;
+        --text-2: #9b9b97;
+        --text-3: #6b6b68;
+        --green-light: #0a2e22;
+        --green-text: #5DCAA5;
+        --red-light: #2a1010;
+        --red-text: #F09595;
+        --blue-light: #0a1e35;
+        --blue-text: #85B7EB;
+        --amber-light: #2a1e08;
+      }
+    }
+
+    html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text); font-size: 16px; }
+
+    /* ── LAYOUT ── */
+    .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--card);
+      border-bottom: 0.5px solid var(--border);
+      padding: calc(var(--safe-top) + 12px) 16px 12px;
+      flex-shrink: 0;
+    }
+    .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .topbar-logo { display: flex; align-items: center; gap: 10px; }
+    .logo-circle { width: 34px; height: 34px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-circle svg { width: 18px; height: 18px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .topbar-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+    .topbar-sub { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+    .topbar-actions { display: flex; gap: 6px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 0.5px solid var(--border); background: var(--bg); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .icon-btn svg { width: 18px; height: 18px; stroke: var(--text); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn.email { background: var(--blue); border-color: var(--blue); }
+    .icon-btn.email svg { stroke: white; }
+    .icon-btn.add { background: var(--green); border-color: var(--green); }
+    .icon-btn.add svg { stroke: white; }
+
+    /* date row */
+    .date-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .date-row label { font-size: 12px; color: var(--text-2); flex-shrink: 0; }
+    .date-row input[type="date"] {
+      background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm);
+      color: var(--text); font-family: inherit; font-size: 13px; padding: 5px 8px; flex: 1; outline: none;
+    }
+    .stats-chips { display: flex; gap: 6px; margin-left: auto; }
+    .chip { background: var(--bg); border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 12px; color: var(--text-2); white-space: nowrap; }
+    .chip span { font-weight: 600; color: var(--text); }
+    .chip.green span { color: var(--green); }
+
+    /* ── TABS ── */
+    .tabs { display: flex; background: var(--card); border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+    .tab { flex: 1; padding: 11px 8px; font-size: 13px; font-weight: 500; color: var(--text-2); text-align: center; border: none; background: transparent; border-bottom: 2px solid transparent; margin-bottom: -0.5px; cursor: pointer; transition: color 0.15s; }
+    .tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+    /* ── SCROLL AREA ── */
+    .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 12px calc(var(--safe-bottom) + 20px); }
+
+    /* ── CLASS CARD ── */
+    .class-card { background: var(--card); border-radius: var(--radius); border: 0.5px solid var(--border); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+    .class-header { display: flex; align-items: center; padding: 12px 14px; gap: 10px; }
+    .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .class-name { font-size: 15px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .class-day { font-size: 12px; color: var(--text-2); white-space: nowrap; }
+    .card-btn { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-2); font-size: 12px; padding: 5px 10px; cursor: pointer; white-space: nowrap; font-family: inherit; }
+    .card-btn:active { opacity: 0.7; }
+
+    /* attendance bar */
+    .att-bar { height: 2px; background: var(--border); }
+    .att-fill { height: 100%; background: var(--green); transition: width 0.4s ease; }
+
+    /* student rows */
+    .students { padding: 4px 0; }
+    .student-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; border-bottom: 0.5px solid var(--border); transition: background 0.1s; }
+    .student-row:last-child { border-bottom: none; }
+    .student-row:active { background: var(--bg); }
+    .check-box { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+    .check-box.on { background: var(--green); border-color: var(--green); }
+    .check-box svg { display: none; width: 13px; height: 13px; stroke: white; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .check-box.on svg { display: block; }
+    .s-name { font-size: 14px; flex: 1; }
+    .s-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
+    .s-badge.present { background: var(--green-light); color: var(--green-text); }
+    .s-badge.absent { background: var(--red-light); color: var(--red-text); }
+
+    /* card footer */
+    .card-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-top: 0.5px solid var(--border); background: var(--bg); }
+    .att-count { font-size: 12px; color: var(--text-2); }
+    .footer-btns { display: flex; gap: 6px; }
+    .footer-btn { font-size: 11px; padding: 4px 9px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--card); color: var(--text-2); cursor: pointer; font-family: inherit; }
+    .footer-btn:active { opacity: 0.7; }
+
+    /* quick add */
+    .quick-add { display: flex; gap: 6px; padding: 8px 10px; border-top: 0.5px solid var(--border); }
+    .quick-add input { flex: 1; background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; color: var(--text); font-family: inherit; outline: none; }
+    .quick-add input:focus { border-color: var(--green); }
+    .quick-add button { background: var(--green); color: white; border: none; border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .quick-add button:active { background: var(--green-dark); }
+
+    /* empty state */
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--text-3); }
+    .empty svg { width: 40px; height: 40px; stroke: var(--border-strong); fill: none; stroke-width: 1.2; margin-bottom: 10px; }
+    .empty p { font-size: 14px; }
+
+    /* ── MODAL ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+    .overlay.open { display: flex; }
+    .modal { background: var(--card); border-radius: 20px 20px 0 0; width: 100%; max-width: 540px; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(var(--safe-bottom) + 8px); }
+    .modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border-strong); margin: 10px auto 0; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 10px; }
+    .modal-title { font-size: 17px; font-weight: 600; }
+    .modal-close { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--bg); color: var(--text-2); font-size: 20px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-body { padding: 4px 18px 16px; }
+    .modal-footer { padding: 10px 18px; border-top: 0.5px solid var(--border); display: flex; gap: 8px; }
+
+    /* form elements */
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 5px; font-weight: 500; }
+    .form-input {
+      width: 100%; padding: 11px 13px; font-size: 15px; font-family: inherit;
+      border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm);
+      background: var(--bg); color: var(--text); outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--green); }
+    select.form-input { -webkit-appearance: none; }
+
+    /* buttons */
+    .btn { flex: 1; padding: 12px; font-size: 15px; font-weight: 500; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text); cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .btn:active { opacity: 0.8; }
+    .btn.primary { background: var(--green); border-color: var(--green); color: white; }
+    .btn.danger-outline { color: var(--red); border-color: var(--red); background: transparent; }
+    .btn.email-btn { background: var(--blue); border-color: var(--blue); color: white; }
+
+    /* student manage list */
+    .manage-list { margin-bottom: 12px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .manage-row { display: flex; align-items: center; padding: 10px 12px; border-bottom: 0.5px solid var(--border); gap: 8px; }
+    .manage-row:last-child { border-bottom: none; }
+    .manage-name { flex: 1; font-size: 14px; }
+    .remove-btn { font-size: 11px; padding: 4px 9px; border-radius: var(--radius-sm); border: 0.5px solid var(--red); background: transparent; color: var(--red); cursor: pointer; font-family: inherit; }
+    .remove-btn:active { background: var(--red-light); }
+
+    /* email preview */
+    .email-preview { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 12px; font-family: monospace; white-space: pre-wrap; color: var(--text-2); max-height: 200px; overflow-y: auto; margin-top: 6px; }
+
+    /* history */
+    .history-block { background: var(--card); border-radius: var(--radius); border: 0.5px solid var(--border); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+    .history-date { padding: 10px 14px; font-size: 13px; font-weight: 600; border-bottom: 0.5px solid var(--border); background: var(--bg); }
+    .history-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 0.5px solid var(--border); }
+    .history-row:last-child { border-bottom: none; }
+    .history-class { font-size: 13px; }
+    .history-att { font-size: 12px; color: var(--text-2); }
+
+    /* toast */
+    .toast { position: fixed; bottom: calc(var(--safe-bottom) + 80px); left: 50%; transform: translateX(-50%) translateY(20px); background: #1a1a18; color: white; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 999; opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @media (prefers-color-scheme: dark) { .toast { background: #f0f0ec; color: #111; } }
+
+    /* section divider */
+    .section-divider { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; padding: 4px 0 8px; }
+    hr.thin { border: none; border-top: 0.5px solid var(--border); margin: 14px 0; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="topbar-logo">
+        <div class="logo-circle">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v6l4 4M12 13l-4 4M9 10h6"/></svg>
+        </div>
+        <div>
+          <div class="topbar-title">Dance Register</div>
+          <div class="topbar-sub" id="topbar-sub">Loading...</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="icon-btn email" onclick="showEmail()" title="Email report">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="icon-btn add" onclick="showAddClass()" title="Add class">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="date-row">
+      <label for="date-pick">Date</label>
+      <input type="date" id="date-pick" onchange="changeDate(this.value)"/>
+      <div class="stats-chips">
+        <div class="chip green"><span id="chip-present">0</span> in</div>
+        <div class="chip"><span id="chip-pct">0%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" id="tab-register" onclick="switchTab('register')">Register</button>
+    <button class="tab" id="tab-history" onclick="switchTab('history')">History</button>
+  </div>
+
+  <!-- SCROLL -->
+  <div class="scroll-area" id="scroll-area"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title"></span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+const KEY = 'dance_register_pwa_v1';
+let S = { classes: [], date: today(), tab: 'register' };
+
+function today() { return new Date().toISOString().split('T')[0]; }
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+function load() {
+  try { const r = localStorage.getItem(KEY); if (r) S = { ...S, ...JSON.parse(r) }; } catch(e) {}
+  if (!S.classes.length) {
+    S.classes = [
+      { id: uid(), name: 'Beginner Ballet', day: 'Monday', time: '10:00', color: '#1D9E75',
+        students: [{id:uid(),name:'Emma Thompson'},{id:uid(),name:'Lily Chen'},{id:uid(),name:'Sofia Martinez'}], attendance:{} },
+      { id: uid(), name: 'Jazz Intermediate', day: 'Wednesday', time: '14:00', color: '#7F77DD',
+        students: [{id:uid(),name:'Jake Wilson'},{id:uid(),name:'Mia Davis'},{id:uid(),name:'Noah Brown'}], attendance:{} },
+      { id: uid(), name: 'Contemporary', day: 'Friday', time: '16:30', color: '#D85A30',
+        students: [{id:uid(),name:'Ava Johnson'},{id:uid(),name:'Lucas Lee'}], attendance:{} },
+    ];
+    save();
+  }
+}
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+
+// ── TOAST ──
+function toast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── MODAL ──
+function openModal(title, body, footer) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-footer').innerHTML = footer;
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => { const f = document.getElementById('modal-body').querySelector('input'); if(f) f.focus(); }, 80);
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function overlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+// ── ATTENDANCE ──
+function att(cls, dateKey) {
+  const a = cls.attendance[dateKey] || {};
+  const present = cls.students.filter(s => a[s.id]).length;
+  return { present, total: cls.students.length, a };
+}
+
+function toggleAtt(cid, sid) {
+  const c = S.classes.find(x => x.id === cid);
+  if (!c) return;
+  if (!c.attendance[S.date]) c.attendance[S.date] = {};
+  c.attendance[S.date][sid] = !c.attendance[S.date][sid];
+  save(); render();
+}
+
+function markAll(cid, val) {
+  const c = S.classes.find(x => x.id === cid);
+  if (!c) return;
+  if (!c.attendance[S.date]) c.attendance[S.date] = {};
+  c.students.forEach(s => c.attendance[S.date][s.id] = val);
+  save(); render();
+}
+
+// ── QUICK ADD ──
+function quickAdd(cid) {
+  const inp = document.getElementById('qa-' + cid);
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (!name) return;
+  const c = S.classes.find(x => x.id === cid);
+  c.students.push({ id: uid(), name });
+  save(); inp.value = ''; render(); toast('Student added!');
+}
+
+// ── FORMAT TIME ──
+function fmt12(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  const hh = parseInt(h);
+  return `${hh % 12 || 12}:${m} ${hh < 12 ? 'AM' : 'PM'}`;
+}
+
+// ── ADD CLASS ──
+function showAddClass() {
+  openModal('Add new class',
+    `<div class="form-group"><label class="form-label">Class name</label><input id="f-name" class="form-input" placeholder="e.g. Advanced Hip Hop" type="text"/></div>
+     <div class="form-group"><label class="form-label">Day</label><select id="f-day" class="form-input"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select></div>
+     <div class="form-group"><label class="form-label">Time</label><input id="f-time" class="form-input" type="time" value="10:00"/></div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="doAddClass()">Add class</button>`
+  );
+}
+
+function doAddClass() {
+  const name = document.getElementById('f-name').value.trim();
+  const day = document.getElementById('f-day').value;
+  const time = document.getElementById('f-time').value;
+  if (!name) { toast('Please enter a class name'); return; }
+  const cols = ['#1D9E75','#7F77DD','#D85A30','#D4537E','#378ADD','#EF9F27','#639922','#BA7517'];
+  const color = cols[S.classes.length % cols.length];
+  S.classes.push({ id: uid(), name, day, time, color, students: [], attendance: {} });
+  save(); closeModal(); render(); toast('Class added!');
+}
+
+// ── EDIT CLASS ──
+function showEdit(cid) {
+  const c = S.classes.find(x => x.id === cid);
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  openModal(`Edit — ${c.name}`,
+    `<div class="form-group"><label class="form-label">Class name</label><input id="f-name" class="form-input" type="text" value="${c.name}"/></div>
+     <div class="form-group"><label class="form-label">Day</label><select id="f-day" class="form-input">${days.map(d=>`<option${d===c.day?' selected':''}>${d}</option>`).join('')}</select></div>
+     <div class="form-group"><label class="form-label">Time</label><input id="f-time" class="form-input" type="time" value="${c.time}"/></div>`,
+    `<button class="btn danger-outline" onclick="doDelete('${cid}')">Delete</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="doEdit('${cid}')">Save</button>`
+  );
+}
+
+function doEdit(cid) {
+  const c = S.classes.find(x => x.id === cid);
+  c.name = document.getElementById('f-name').value.trim() || c.name;
+  c.day = document.getElementById('f-day').value;
+  c.time = document.getElementById('f-time').value;
+  save(); closeModal(); render(); toast('Class updated!');
+}
+
+function doDelete(cid) {
+  if (!confirm('Delete this class and all its data?')) return;
+  S.classes = S.classes.filter(c => c.id !== cid);
+  save(); closeModal(); render(); toast('Class deleted');
+}
+
+// ── MANAGE STUDENTS ──
+function showStudents(cid) {
+  const c = S.classes.find(x => x.id === cid);
+  rebuildStudentModal(c);
+}
+
+function rebuildStudentModal(c) {
+  const rows = c.students.length
+    ? c.students.map(s => `<div class="manage-row"><span class="manage-name">${s.name}</span><button class="remove-btn" onclick="doRemove('${c.id}','${s.id}')">Remove</button></div>`).join('')
+    : `<div style="padding:12px;font-size:13px;color:var(--text-3);">No students yet.</div>`;
+  openModal(`Students — ${c.name}`,
+    `<div class="section-divider">Enrolled students</div>
+     <div class="manage-list">${rows}</div>
+     <hr class="thin"/>
+     <div class="section-divider">Add student</div>
+     <div class="form-group"><input id="f-student" class="form-input" type="text" placeholder="Full name" onkeydown="if(event.key==='Enter')doAddStudent('${c.id}')"/></div>`,
+    `<button class="btn" onclick="closeModal()">Done</button><button class="btn primary" onclick="doAddStudent('${c.id}')">Add</button>`
+  );
+}
+
+function doAddStudent(cid) {
+  const c = S.classes.find(x => x.id === cid);
+  const name = (document.getElementById('f-student').value || '').trim();
+  if (!name) return;
+  c.students.push({ id: uid(), name });
+  save(); rebuildStudentModal(c); render(); toast('Student added!');
+}
+
+function doRemove(cid, sid) {
+  const c = S.classes.find(x => x.id === cid);
+  c.students = c.students.filter(s => s.id !== sid);
+  Object.keys(c.attendance).forEach(d => delete c.attendance[d][sid]);
+  save(); rebuildStudentModal(c); render();
+}
+
+// ── EMAIL ──
+function showEmail() {
+  const dateStr = new Date(S.date + 'T12:00:00').toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let body = `DANCE STUDIO REGISTER\nDate: ${dateStr}\n${'─'.repeat(38)}\n\n`;
+  S.classes.forEach(c => {
+    const { present, total, a } = att(c, S.date);
+    body += `${c.name.toUpperCase()} — ${c.day} ${fmt12(c.time)}\n`;
+    body += `Attendance: ${present} of ${total} (${total?Math.round(present/total*100):0}%)\n\n`;
+    const p = c.students.filter(s => a[s.id]);
+    const ab = c.students.filter(s => !a[s.id]);
+    if (p.length) body += `  Present:\n${p.map(s=>`    ✓ ${s.name}`).join('\n')}\n`;
+    if (ab.length) body += `  Absent:\n${ab.map(s=>`    ✗ ${s.name}`).join('\n')}\n`;
+    body += '\n';
+  });
+
+  openModal('Email register',
+    `<div class="form-group"><label class="form-label">Recipient email</label><input id="f-email" class="form-input" type="email" placeholder="studio@example.com"/></div>
+     <div class="form-group"><label class="form-label">Subject</label><input id="f-subject" class="form-input" type="text" value="Dance Register — ${dateStr}"/></div>
+     <div class="form-group"><label class="form-label">Preview</label><div class="email-preview">${body}</div></div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn email-btn" onclick="doEmail(${JSON.stringify(body).replace(/</g,'\\u003c')})">Open in Mail ↗</button>`
+  );
+}
+
+function doEmail(body) {
+  const email = (document.getElementById('f-email').value || '').trim();
+  const subject = document.getElementById('f-subject').value || 'Dance Register';
+  window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  closeModal(); toast('Opening mail app...');
+}
+
+// ── DATE ──
+function changeDate(val) { S.date = val; save(); render(); }
+
+// ── TABS ──
+function switchTab(t) {
+  S.tab = t;
+  document.getElementById('tab-register').classList.toggle('active', t === 'register');
+  document.getElementById('tab-history').classList.toggle('active', t === 'history');
+  render();
+}
+
+// ── RENDER ──
+function renderRegister() {
+  if (!S.classes.length) {
+    return `<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg><p>No classes yet.<br/>Tap + to add your first class.</p></div>`;
+  }
+  return S.classes.map(c => {
+    const { present, total, a } = att(c, S.date);
+    const pct = total ? Math.round(present / total * 100) : 0;
+    const studentRows = c.students.map(s => {
+      const on = !!a[s.id];
+      return `<div class="student-row" onclick="toggleAtt('${c.id}','${s.id}')">
+        <div class="check-box ${on ? 'on' : ''}"><svg viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg></div>
+        <span class="s-name">${s.name}</span>
+        <span class="s-badge ${on ? 'present' : 'absent'}">${on ? 'Present' : 'Absent'}</span>
+      </div>`;
+    }).join('');
+    const emptyStudents = `<div style="padding:14px 14px;font-size:13px;color:var(--text-3);">No students. Add via Students button or quick add below.</div>`;
+
+    return `<div class="class-card">
+      <div class="class-header">
+        <div class="color-dot" style="background:${c.color}"></div>
+        <span class="class-name">${c.name}</span>
+        <span class="class-day">${c.day}${c.time ? ' · ' + fmt12(c.time) : ''}</span>
+        <button class="card-btn" style="margin-left:4px" onclick="showStudents('${c.id}')">Students</button>
+        <button class="card-btn" onclick="showEdit('${c.id}')">Edit</button>
+      </div>
+      <div class="att-bar"><div class="att-fill" style="width:${pct}%"></div></div>
+      <div class="students">${c.students.length ? studentRows : emptyStudents}</div>
+      <div class="quick-add">
+        <input type="text" id="qa-${c.id}" placeholder="Quick-add student name..." onkeydown="if(event.key==='Enter')quickAdd('${c.id}')"/>
+        <button onclick="quickAdd('${c.id}')">+ Add</button>
+      </div>
+      <div class="card-footer">
+        <span class="att-count">${present} / ${total} present &nbsp;·&nbsp; ${pct}%</span>
+        <div class="footer-btns">
+          <button class="footer-btn" onclick="markAll('${c.id}',true)">All in</button>
+          <button class="footer-btn" onclick="markAll('${c.id}',false)">Clear</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory() {
+  const allDates = new Set();
+  S.classes.forEach(c => Object.keys(c.attendance).forEach(d => allDates.add(d)));
+  const dates = [...allDates].sort().reverse();
+  if (!dates.length) return `<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>No history yet.<br/>Take a register to start logging.</p></div>`;
+
+  return dates.map(d => {
+    const dateStr = new Date(d + 'T12:00:00').toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    const rows = S.classes.map(c => {
+      const at = c.attendance[d];
+      if (!at || !Object.keys(at).length) return '';
+      const { present, total } = att(c, d);
+      const pct = total ? Math.round(present/total*100) : 0;
+      const col = pct >= 75 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+      return `<div class="history-row">
+        <span class="history-class">${c.name}</span>
+        <span class="history-att" style="color:${col};font-weight:500;">${present}/${total} (${pct}%)</span>
+      </div>`;
+    }).filter(Boolean).join('');
+    if (!rows) return '';
+    return `<div class="history-block"><div class="history-date">${dateStr}</div>${rows}</div>`;
+  }).join('');
+}
+
+function render() {
+  document.getElementById('date-pick').value = S.date;
+
+  const totalPresent = S.classes.reduce((a, c) => a + att(c, S.date).present, 0);
+  const totalStudents = S.classes.reduce((a, c) => a + c.students.length, 0);
+  const pct = totalStudents ? Math.round(totalPresent / totalStudents * 100) : 0;
+
+  document.getElementById('chip-present').textContent = totalPresent;
+  document.getElementById('chip-pct').textContent = pct + '%';
+  document.getElementById('topbar-sub').textContent = `${S.classes.length} class${S.classes.length !== 1 ? 'es' : ''} · ${totalStudents} students`;
+
+  document.getElementById('scroll-area').innerHTML =
+    S.tab === 'register' ? renderRegister() : renderHistory();
+}
+
+// ── INIT ──
+load();
+render();
+
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
